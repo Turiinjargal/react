@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -27,6 +27,11 @@ const ARTCurrentMode = require('art/modes/current');
 const Circle = require('react-art/Circle');
 const Rectangle = require('react-art/Rectangle');
 const Wedge = require('react-art/Wedge');
+
+// Isolate the noop renderer
+jest.resetModules();
+const ReactNoop = require('react-noop-renderer');
+const Scheduler = require('scheduler');
 
 let Group;
 let Shape;
@@ -354,7 +359,7 @@ describe('ReactART', () => {
     const CurrentRendererContext = React.createContext(null);
 
     function Yield(props) {
-      testRenderer.unstable_yield(props.value);
+      Scheduler.yieldValue(props.value);
       return null;
     }
 
@@ -372,19 +377,16 @@ describe('ReactART', () => {
 
     // Using test renderer instead of the DOM renderer here because async
     // testing APIs for the DOM renderer don't exist.
-    const testRenderer = ReactTestRenderer.create(
+    ReactNoop.render(
       <CurrentRendererContext.Provider value="Test">
         <Yield value="A" />
         <Yield value="B" />
         <LogCurrentRenderer />
         <Yield value="C" />
       </CurrentRendererContext.Provider>,
-      {
-        unstable_isAsync: true,
-      },
     );
 
-    testRenderer.unstable_flushThrough(['A']);
+    expect(Scheduler).toFlushAndYieldThrough(['A']);
 
     ReactDOM.render(
       <Surface>
@@ -399,7 +401,7 @@ describe('ReactART', () => {
     expect(ops).toEqual([null, 'ART']);
 
     ops = [];
-    expect(testRenderer.unstable_flushAll()).toEqual(['B', 'C']);
+    expect(Scheduler).toFlushAndYield(['B', 'C']);
 
     expect(ops).toEqual(['Test']);
   });

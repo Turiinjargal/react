@@ -1,16 +1,28 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
 
-import * as ReactScheduler from 'shared/ReactScheduler';
 import Transform from 'art/core/transform';
 import Mode from 'art/modes/current';
+import * as Scheduler from 'scheduler';
 import invariant from 'shared/invariant';
 
 import {TYPES, EVENT_TYPES, childrenAsString} from './ReactARTInternals';
+import type {ReactEventComponentInstance} from 'shared/ReactTypes';
+
+// Intentionally not named imports because Rollup would
+// use dynamic dispatch for CommonJS interop named imports.
+const {
+  unstable_now: now,
+  unstable_scheduleCallback: scheduleDeferredCallback,
+  unstable_shouldYield: shouldYield,
+  unstable_cancelCallback: cancelDeferredCallback,
+} = Scheduler;
+
+export {now, scheduleDeferredCallback, shouldYield, cancelDeferredCallback};
 
 const pooledTransform = new Transform();
 
@@ -329,16 +341,23 @@ export function getChildHostContext() {
   return NO_CONTEXT;
 }
 
-export const scheduleDeferredCallback = ReactScheduler.scheduleWork;
-export const cancelDeferredCallback = ReactScheduler.cancelScheduledWork;
+export function getChildHostContextForEventComponent() {
+  return NO_CONTEXT;
+}
+
+export function getChildHostContextForEventTarget() {
+  return NO_CONTEXT;
+}
+
+export const scheduleTimeout = setTimeout;
+export const cancelTimeout = clearTimeout;
+export const noTimeout = -1;
 
 export function shouldSetTextContent(type, props) {
   return (
     typeof props.children === 'string' || typeof props.children === 'number'
   );
 }
-
-export const now = ReactScheduler.now;
 
 // The ART renderer is secondary to the React DOM renderer.
 export const isPrimaryRenderer = false;
@@ -401,4 +420,65 @@ export function commitUpdate(
   newProps,
 ) {
   instance._applyProps(instance, newProps, oldProps);
+}
+
+export function hideInstance(instance) {
+  instance.hide();
+}
+
+export function hideTextInstance(textInstance) {
+  // Noop
+}
+
+export function unhideInstance(instance, props) {
+  if (props.visible == null || props.visible) {
+    instance.show();
+  }
+}
+
+export function unhideTextInstance(textInstance, text): void {
+  // Noop
+}
+
+export function mountEventComponent(
+  eventComponentInstance: ReactEventComponentInstance,
+) {
+  throw new Error('Not yet implemented.');
+}
+
+export function updateEventComponent(
+  eventComponentInstance: ReactEventComponentInstance,
+) {
+  throw new Error('Not yet implemented.');
+}
+
+export function unmountEventComponent(
+  eventComponentInstance: ReactEventComponentInstance,
+): void {
+  throw new Error('Not yet implemented.');
+}
+
+export function getEventTargetChildElement(
+  type: Symbol | number,
+  props: Props,
+): null {
+  throw new Error('Not yet implemented.');
+}
+
+export function handleEventTarget(
+  type: Symbol | number,
+  props: Props,
+  rootContainerInstance: Container,
+  internalInstanceHandle: Object,
+): boolean {
+  throw new Error('Not yet implemented.');
+}
+
+export function commitEventTarget(
+  type: Symbol | number,
+  props: Props,
+  instance: Instance,
+  parentInstance: Instance,
+): void {
+  throw new Error('Not yet implemented.');
 }

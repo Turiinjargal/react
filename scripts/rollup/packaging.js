@@ -12,6 +12,7 @@ const {
 const {
   UMD_DEV,
   UMD_PROD,
+  UMD_PROFILING,
   NODE_DEV,
   NODE_PROD,
   NODE_PROFILING,
@@ -41,6 +42,7 @@ function getBundleOutputPaths(bundleType, filename, packageName) {
       return [`build/node_modules/${packageName}/cjs/${filename}`];
     case UMD_DEV:
     case UMD_PROD:
+    case UMD_PROFILING:
       return [
         `build/node_modules/${packageName}/umd/${filename}`,
         `build/dist/${filename}`,
@@ -54,7 +56,7 @@ function getBundleOutputPaths(bundleType, filename, packageName) {
     case RN_OSS_PROFILING:
       switch (packageName) {
         case 'react-native-renderer':
-          return [`build/react-native/oss/${filename}`];
+          return [`build/react-native/implementations/${filename}`];
         default:
           throw new Error('Unknown RN package.');
       }
@@ -63,7 +65,12 @@ function getBundleOutputPaths(bundleType, filename, packageName) {
     case RN_FB_PROFILING:
       switch (packageName) {
         case 'react-native-renderer':
-          return [`build/react-native/fb/${filename}`];
+          return [
+            `build/react-native/implementations/${filename.replace(
+              /\.js$/,
+              '.fb.js'
+            )}`,
+          ];
         default:
           throw new Error('Unknown RN package.');
       }
@@ -91,7 +98,6 @@ async function copyRNShims() {
       require.resolve('react-native-renderer/src/ReactNativeTypes.js'),
       'build/react-native/shims/ReactNativeTypes.js'
     ),
-    asyncCopyTo(`${__dirname}/shims/react-native-fb`, 'build/react-native/fb'),
   ]);
 }
 
